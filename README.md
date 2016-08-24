@@ -1,9 +1,10 @@
 # Tensorflow tf.nn.dynamic_rnn Example
-Tensorflow의 dynamic_rnn을 이용하여 동작 인식하는 예제 코드
+dynamic_rnn example of tensorflow for activity recognition
 
 ## Dependencies
 ```
-tensorflow
+python >= 3.0
+tensorflow >= 0.8
 numpy
 pandas
 tflearn
