@@ -27,7 +27,6 @@ class HarData(object):
     def split_time(m, split_size):
         r = m.shape[0]
         extend_row_size = int(np.math.ceil((0.+r) / split_size)) * split_size - r
-        print(extend_row_size)
         m_p = np.expand_dims(np.pad(m, [(0, extend_row_size), (0, 0)], mode='constant'), axis=0)
         result = m_p.reshape((int(np.math.ceil((0.+r) / split_size)), split_size, m.shape[1]))
         return result
