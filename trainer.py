@@ -26,9 +26,9 @@ class HarData(object):
     @staticmethod
     def split_time(m, split_size):
         r = m.shape[0]
-        extend_row_size = np.math.ceil(r / split_size) * split_size - r
+        extend_row_size = int(np.math.ceil((0.+r) / split_size)) * split_size - r
         m_p = np.expand_dims(np.pad(m, [(0, extend_row_size), (0, 0)], mode='constant'), axis=0)
-        result = m_p.reshape((np.math.ceil(r / split_size), split_size, m.shape[1]))
+        result = m_p.reshape((int(np.math.ceil((0.+r) / split_size)), split_size, m.shape[1]))
         return result
 
     @staticmethod
@@ -66,15 +66,15 @@ class Trainer(object):
         self._index = tf.placeholder(tf.int32, [None, ])
 
         initializer = tf.random_uniform_initializer(-1, 1)
-        cell = tf.nn.rnn_cell.LSTMCell(self._hidden_size, self._feature_size, initializer=initializer)
-        cell_out = tf.nn.rnn_cell.OutputProjectionWrapper(cell, self._output_size)
+        cell = tf.contrib.rnn.LSTMCell(self._hidden_size, self._feature_size, initializer=initializer)
+        cell_out = tf.contrib.rnn.OutputProjectionWrapper(cell, self._output_size)
         outputs, _ = tf.nn.dynamic_rnn(cell_out, self._x, sequence_length=self._index, dtype=tf.float32,
                                        time_major=True)
         output_shape = tf.shape(outputs)
         prediction = tf.nn.softmax(tf.reshape(outputs, [-1, self._output_size]))
         self._prediction = tf.reshape(prediction, output_shape)
-        self._loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(tf.reshape(outputs,[-1, self._output_size]),
-                                                                      tf.reshape(self._y, [-1, self._output_size])))
+        self._loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=tf.reshape(outputs,[-1, self._output_size]),
+                                                                      labels=tf.reshape(self._y, [-1, self._output_size])))
         #self._loss = tf.reduce_mean(tf.sqrt(tf.pow(self._prediction - self._y, 2)))  # mse
         self._optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(self._loss)
         correct_prediction = tf.equal(tf.argmax(self._prediction, 2), tf.argmax(self._y, 2))
@@ -89,7 +89,7 @@ class Trainer(object):
         validation_total_size = validation_set[0].shape[0]
         validation_xs = np.swapaxes(validation_set[0], 0, 1)
         validation_ys = np.swapaxes(validation_set[1], 0, 1)
-        train_total_batch = int(train_total_size / self._batch_size)
+        train_total_batch = int((train_total_size+0.) / self._batch_size)
 
         # Launch the graph
         max_accuracy = 0.
@@ -110,7 +110,7 @@ class Trainer(object):
                     sess.run(self._optimizer,
                              feed_dict={self._x: batch_xs, self._y: batch_ys, self._index: batch_indices})
                     cost = self._loss.eval(feed_dict={self._x: batch_xs, self._y: batch_ys, self._index: batch_indices})
-                    avg_cost += cost / train_total_batch
+                    avg_cost += (cost+0.) / train_total_batch
                     s = e
                     e += self._batch_size
                     if e > train_total_size:
